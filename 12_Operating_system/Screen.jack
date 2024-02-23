@@ -1,0 +1,295 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Screen.jack
+
+/**
+ * A library of functions for displaying graphics on the screen.
+ * The Hack physical screen consists of 512 rows (indexed 0..511, top to bottom)
+ * of 256 pixels each (indexed 0..255, left to right). The top left pixel on 
+ * the screen is indexed (0,0).
+ */
+class Screen {
+    static Array twoToThe;
+    static Array memory;
+    static int screenAddress;
+    static boolean white;
+    static boolean black;
+    static boolean color;
+
+
+    /** Initializes the Screen. */
+    function void init() {
+        let screenAddress = 16384;
+        let memory = screenAddress;
+        let black = true;
+        let white = false;
+        let color = black;
+        let twoToThe = Array.new(16);
+		let twoToThe[0] = 1;		
+		let twoToThe[1] = 2;	
+		let twoToThe[2] = 4;		
+		let twoToThe[3] = 8;		
+		let twoToThe[4] = 16;		
+		let twoToThe[5] = 32;		
+		let twoToThe[6] = 64;		
+		let twoToThe[7] = 128;		
+		let twoToThe[8] = 256;		
+		let twoToThe[9] = 512;		
+		let twoToThe[10] = 1024;	
+		let twoToThe[11] = 2048;	
+		let twoToThe[12] = 4096;	
+		let twoToThe[13] = 8192;	
+		let twoToThe[14] = 16384;	
+		let twoToThe[15] = 32767 + 1;	//http://nand2tetris-questions-and-answers-forum.52.s1.nabble.com/integer-value-of-1000000000000000-td4029101.html
+        return;
+
+
+    }
+
+    /** Erases the entire screen. */
+    function void clearScreen() {
+        var int i;
+
+        let i = 0;
+        while (i < 8192){
+            let memory[i] = white;
+            let i = i + 1;
+        }
+        return;
+    }
+
+    /** Sets the current color, to be used for all subsequent drawXXX commands.
+     *  Black is represented by true, white by false. */
+    function void setColor(boolean b) {
+        let color = b;
+        return;
+
+        
+    }
+
+    /** Draws the (x,y) pixel, using the current color. */
+    function void drawPixel(int x, int y) {
+        var int adress, row, column, bit, division;
+
+        let row = y * 32 ;
+        let column = x / 16;
+        let bit = x;
+        if (x > 15) {
+            let bit = x - (column * 16); //calculate like a module but in increments of 16
+        }
+        let adress = row + column;
+
+        if (color){
+            let memory[adress] =  memory[adress] | twoToThe[bit]  ;
+        }
+        else{
+            let memory[adress] = memory[adress] & twoToThe[bit] ;    // xAND(NOT(bit)
+        }
+        return;
+    }
+
+    /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
+    function void drawLine(int x1, int y1, int x2, int y2) {
+        var int dx, dy;
+        var int minX, minY;
+
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+
+        let minX = Math.min(x1, x2);
+        let minY = Math.min(y1, y2);
+
+        //draw vertical lines
+        if (dx = 0){
+                do Screen.drawVerticalLine(x1, minY, Math.abs(dy));
+            return;
+        }
+        
+        //draw horizontal lines
+        if (dy = 0){
+            do Screen.drawHorizontalFaster(minX, Math.max(x1,x2), y1);
+            return;
+        }
+        //draw lines  x++,y++ and x--,y-- 
+        if((dx > 0) & (dy > 0)){
+            do Screen.drawDiagonalLine(x1 , y1, dx, dy);
+            return;
+        }
+        if((dx < 0) & (dy < 0)){
+            do Screen.drawDiagonalLine(minX , minY, Math.abs(dx), Math.abs(dy));
+            return;
+        }
+
+        //draw lines x--,y++ and x++,y--
+        if((dx < 0) & (dy > 0)){
+            do Screen.drawDiagonalLine2(x1 , y1, Math.abs(dx), Math.abs(dy));
+            return;
+        }
+        if((dx > 0) & (dy < 0)){
+            do Screen.drawDiagonalLine2(x2 , y2, Math.abs(dx), Math.abs(dy));
+            return;
+        }
+        
+        
+        
+
+        return;
+    }
+
+    function void drawVerticalLine(int x1, int y, int dy){
+        var int i;
+        let i = 0;
+        while ((i < dy) | (i = dy)){
+            do Screen.drawPixel(x1, y + i);
+            let i = i + 1;
+        }
+        return;
+    }
+
+
+    function void drawHorizontalLine(int x, int y1, int dx){
+        var int i;
+
+        let i = 0;
+
+        while (i < dx){
+            do Screen.drawPixel(x + i, y1);
+            let i = i + 1;
+        }
+        return;
+    }
+
+    function void drawHorizontalFaster(int x1, int x2, int y){
+        var int steps ,dx, adress, row, column, bit, division, bits;
+        //calculate bits needed
+        let steps = x2 - x1;
+
+        //handle smaller lines, that may end not aligned to the right "ex: 0011 1111 1111 1111" "ex: 0011 1111 0000 0000"
+        if (steps < 16){
+            do Screen.drawHorizontalLine(x1, y, steps);
+            return;
+        }
+
+        //calculate starting point adress
+        let row = y * 32;
+        let column = x1 / 16;
+        let adress = row + column;
+
+        //calculate starting position in adress
+        let bit = x1;
+        if (x1 > 15) {
+            let bit = x1 - (column * 16); //calculate like a module but in increments of 16
+        }
+       
+        //first step, aligned to the right of screen ex:"1110 0000 0000 0000"
+        if(color){
+            let memory[adress] =  memory[adress] | ~(twoToThe[bit]-1);
+        }
+        else{
+            let memory[adress] =  memory[adress] & (twoToThe[bit]-1);
+        }
+        let steps = steps - (15 - bit);  
+        let adress = adress + 1;
+
+        //middle steps
+        while (steps > 14){
+            if(color){
+                let memory[adress] = -1 ;
+            }
+            else{
+                let memory[adress] = 0;
+            }
+            let adress = adress + 1;
+            let steps = steps - 16;
+        }
+
+        //last step, aligned to the left of the screen ex:"0000 0001 1111 1111"
+        if (steps > 0){
+            if (color){
+                let memory[adress] = memory[adress] | twoToThe[steps]-1;
+            }
+            else{
+                let memory[adress] = memory[adress] & ~(twoToThe[steps]-1);
+            }
+        }
+
+        return;
+    }
+    
+
+    //handles +dx,+dy and -dx,-dy
+    function void drawDiagonalLine(int x, int y, int dx, int dy){ 
+        var int a, b, adyMinusbdx;
+
+        let a= 0;
+        let b = 0;
+        let adyMinusbdx = 0;
+
+        while( (a < dx) & (b < dy) ){
+            do Screen.drawPixel(x + a, y + b);
+            if(adyMinusbdx < 0){
+                let a = a + 1;
+                let adyMinusbdx = adyMinusbdx + dy;
+            }
+            else{
+                let b = b + 1;
+                let adyMinusbdx = adyMinusbdx - dx;
+            }
+        }
+       
+        return;
+    }
+
+    //handles +dx,-dy and -dx,+dy
+    function void drawDiagonalLine2(int x, int y, int dx, int dy){
+        var int a, b, adyMinusbdx;
+
+        let a = 0;
+        let b = 0;
+        let adyMinusbdx = 0;
+
+        while( (a < dx) & (b < dy) ){
+            do Screen.drawPixel(x - a, y + b);
+            if(adyMinusbdx < 0){
+                let a = a + 1;
+                let adyMinusbdx = adyMinusbdx + dy;
+            }
+            else{
+                let b = b + 1;
+                let adyMinusbdx = adyMinusbdx - dx;
+            }
+        }
+        return;
+    }
+    
+
+    /** Draws a filled rectangle whose top left corner is (x1, y1)
+     * and bottom right corner is (x2,y2), using the current color. */
+    function void drawRectangle(int x1, int y1, int x2, int y2) {
+
+        while(y1 < y2){
+            do Screen.drawHorizontalFaster(x1, x2, y1);
+            let y1 = y1 + 1;
+        }
+        return;
+
+    }
+
+    /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
+    function void drawCircle(int x, int y, int r) {
+        var int i;
+        var int sq;
+        //var int dx;
+
+        let i = -r; 
+
+        while(i < r){
+            let sq = Math.sqrt(((r*r) - (i*i)));
+            do Screen.drawHorizontalFaster((x-sq), (x+sq), y+i); 
+            let i = i + 1;
+        }
+        return;
+
+    }
+}

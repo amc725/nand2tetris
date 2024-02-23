@@ -1,0 +1,164 @@
+class Main{
+    function void main(){
+        var int size;           
+        var int fav;            //rng seed for number
+        var int turn;
+        var Cardboard cardboard1, cardboard2;
+        var Drum drum;
+        var int drumSeed;
+        var Array players_fav;  //rng seed for players cardboards
+        var int number;         //current turn nimber
+        var int end;            //game end flag
+        var int status1;        //player 1 won flag
+        var int status2;        //player 2 won  flag
+        var int wait;           //useless variable to get the stack rid of Keyboard.readInt return value
+        
+        let turn = 1;
+        let end = 0;
+        let status1 = 0;
+        let status2 = 0;
+        let size = Keyboard.readInt("Choose the size of the cardboard, minimum 3  ");
+        if (size < 3){
+            let size = 3;
+        }
+        do Output.println();
+        
+
+        let players_fav = Array.new(2);
+        let players_fav[0] = Keyboard.readInt("Choose a lucky number player 1  ");
+        do Output.println();
+        let players_fav[1] = Keyboard.readInt("Choose a lucky number player 2  ");
+        do Output.println();
+        
+
+        let cardboard1 = Cardboard.new(players_fav[0], size);
+        let cardboard2 = Cardboard.new(players_fav[1], size);
+        let cardboard1 = Cardboard.new(5, size);
+        let cardboard2 = Cardboard.new(1, size);
+
+        let drumSeed = players_fav[0] * players_fav[1];
+        let drum = Drum.new(drumSeed, 99);
+        
+        let cardboard1 = Cardboard.new(players_fav[0], size);
+        let cardboard2 = Cardboard.new(players_fav[1], size);
+
+        //show cardboards before first turn
+        do Output.printString("These are your cardboards");
+        do Output.println();
+        do Output.printString("Player 1");
+        do Output.println();
+        do cardboard1.print();
+        do Output.println();
+        do Output.printString("Player 2");
+        do Output.println();
+        do cardboard2.print();
+        do Output.println();
+        do Output.moveCursor(1,1);
+        do Sys.wait(32767);
+        do Screen.clearScreen();
+
+
+
+
+
+        
+
+
+
+
+        while(end = 0){
+            do Screen.clearScreen();
+            do Output.moveCursor(0,0);
+            let number = drum.getNumber();
+            do Output.printString("Turn ");
+            do Output.printInt(turn);
+            do Output.println();
+            do Output.println();
+            do Output.printInt(number);
+            do Output.println();do Output.println();
+            
+
+            let turn = turn + 1;
+            
+
+            do Output.printString("Player 1");
+            do Output.println();
+            if(cardboard1.print_and_check(number) = true){
+                    if(cardboard1.check_score_horizontal() = true){
+                        let end = 1;
+                        let status1 = 1;
+                   }
+                   if(cardboard1.check_score_vertical() = true){
+                        let end = 1;
+                        let status1 = 1;
+                   }
+                    if(cardboard1.check_score_diagonal() = true){
+                        let end = 1;
+                        let status1 = 1;
+                   }
+                
+                }
+            
+            do Output.println();
+            do Output.println();
+            do Output.printString("Player 2");
+            do Output.println();
+
+            if(cardboard2.print_and_check(number) = true){
+                    if(cardboard2.check_score_horizontal() = true){
+                        let end = 1;
+                        let status2 = 1;
+                   }
+                   if(cardboard2.check_score_vertical() = true){
+                        let end = 1;
+                        let status2 = 1;
+                   }
+                    if(cardboard2.check_score_diagonal() = true){
+                        let end = 1;
+                        let status2 = 1;
+                   }
+                
+                }
+            if(end = 0){
+                do Output.println();
+                let wait = Keyboard.readInt("Press Enter to next turn ");
+            }
+
+        }
+        
+        do Output.println();
+        if(status1 = 1){
+            if(status2 = 0){
+                do Output.printString("Player 1 won");
+            }
+            if(status2 = 1){
+                do Output.printString("It's a draw");
+            }
+        }
+        else{
+            do Output.printString("Player 2 won");
+        }
+ 
+        
+
+        
+ 
+        
+        
+            
+
+        
+
+        
+        
+      
+        
+    
+        
+
+ 
+
+        return;
+    }
+}
+

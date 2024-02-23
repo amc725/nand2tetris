@@ -1,0 +1,187 @@
+class Cardboard {
+    field int size;
+    field int size2;
+    field Array card;
+    field Random rng;
+    field Array score; 
+
+    constructor Cardboard new(int fav, int csize){
+        var int i;
+        var int j;
+        let size = csize;
+        let size2 = Math.multiply(size, size);
+        let rng = Random.new(fav);
+        let card = Array.new(size2);
+        let score = Array.new(size2);
+
+        
+        let i = 0;
+        while(i < size2){
+            let card[i] = rng.randRange(99);
+            let i = i + 1;
+        }
+        return this;
+    }
+
+    method void print(){
+        var int i;
+        var int j;
+        var string space;
+        let i = 0;
+        let j = 0;
+        let space = "   ";
+
+
+        while(i < size2){
+            do Output.printInt(card[i]);
+            do Output.printString(space);
+            let i = i + 1;
+            let j = j + 1;
+            if(j = size){
+                do Output.println();
+                let j = 0;
+            }
+        }
+        return;
+    }
+
+    method boolean print_and_check(int number){
+        var int i;
+        var int j;
+        var string space;
+        var boolean hit;
+        let i = 0;
+        let j = 0;
+        let space = "   ";
+        let hit = false;
+
+
+        while(i < size2){
+            if(card[i] = number){
+                let score[i] = true;
+                let hit = true;   
+            }
+            if (score[i] = true){
+                do Output.printString(space);
+                do Output.printString("*");
+                do Output.printInt(card[i]);
+                
+            }
+            else{
+                do Output.printString(space);  
+                do Output.printInt(card[i]);
+                
+                
+            }
+            let i = i + 1;
+            let j = j + 1;
+            if(j = size){
+                do Output.println();
+                let j = 0;
+            }
+        }
+        return hit;
+    }
+
+    method boolean check_score_horizontal(){
+        var boolean state;
+        var int i;
+        var int j;
+        var int sum;
+        let state = false;
+        let i = 0;
+        let j = 0;
+        let sum = 0;
+        
+        while(i < size2){
+            if (score[i] = true){
+                let sum = sum + 1;
+            } 
+            let i = i + 1;
+            let j = j + 1;
+            if (j = size){
+                if(sum = size){
+                    let state = true;
+                }
+                let sum = 0;
+                let j = 0;
+            }
+        }
+    return state;
+   }
+
+    method boolean check_score_vertical(){
+        var boolean state;
+        var int i;
+        var int k;
+        var int sum;
+        let state = false;
+        let i = 0;
+        let k = 0;
+        let sum = 0;
+        
+        while(i < size2){
+            if (score[k] = true){ 
+                let sum = sum + 1;
+            }
+            let i = i + 1;  
+            let k = k + size;
+            if (~(k < size2) ){     //is k greater or equal
+                if(sum = size){
+                    let state = true;
+                }
+                let sum = 0;
+                let k = k - size2 + 1;  //set k at beggining of the next column
+            }
+        }
+    return state;
+   }
+
+method boolean check_score_diagonal(){
+        var boolean state;
+        var int i;
+        var int j;
+        var int sum;
+        let state = false;
+        let i = 0;
+        let j = 0;
+        let sum = 0;
+        
+        while(i < size){
+            if (score[j] = true){
+                let sum = sum + 1;
+            }
+            let j = j + size + 1;
+            let i = i + 1;
+            }
+        
+        if (sum = size){
+            let state = true;
+        }
+
+        let i = 0;
+        let sum = 0;
+        let j = 15;
+        while(i < size){
+            if (score[j] = true){
+                let sum = sum + 1;
+            }
+            let j = j - size - 1;
+            let i = i + 1;
+        }
+        
+        if (sum = size){
+            let state = true;
+        }
+
+        return state;
+        }
+        
+}
+
+    
+
+    
+
+
+

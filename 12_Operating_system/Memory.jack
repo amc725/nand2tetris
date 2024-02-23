@@ -1,0 +1,114 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Memory.jack
+
+/**
+ * This library provides two services: direct access to the computer's main
+ * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
+ * consists of 32,768 words, each holding a 16-bit binary number.
+ */ 
+class Memory {
+    static Array memory;
+    static Array freelist;
+    static int heapbase, length, pointer;
+
+    /** Initializes the class. */
+    function void init() {
+        let memory = 0;
+        let heapbase = 2048;
+        let freelist = heapbase;
+        let freelist[0] = 14334;   //let memory[heapbase] = freeListLength // 16384 - 2048 - overhead 
+        let freelist[1] = 16384;   //
+        return;
+    }
+
+    /** Returns the RAM value at the given address. */
+    function int peek(int address) {
+        return memory[address];
+    }
+
+    /** Sets the RAM value at the given address to the given value. */
+    function void poke(int address, int value) {
+        let memory[address] = value;
+        return;
+    }
+
+    /** Finds an available RAM block of the given size and returns
+     *  a reference to its base address. */
+    function int alloc(int size) {  //alloc(3)
+        //First address is used for the length of the block, if the block is allocated its value is zero if it's free its value it's the length of the block
+        //The length doesn't take in account the two address overhead just the values it can hold
+        //Allocated blocks may end up being bigger that requested, doesn't matter since the length of the block it's calculated in deAlloc() using the distance to the Next block
+        //Second address hold the value of the next block address
+
+        var int pointer, next, length, realsize;
+        let realsize = size + 2;    //account for overhead
+
+        let pointer = heapbase;             //let pointer = 2048
+        let length = memory[pointer];       //let length = 14334
+        let next = memory[pointer + 1];     //16384
+        
+        //Search for a big enough block and stop if it had been found or if we have reached the end of the heap
+        while ((memory[pointer] < size) & ~(next = 16384)){  
+            let pointer = next;
+            let length = memory[pointer];
+            let next   = memory[pointer + 1];
+        }
+
+        if (next = 16384 ){
+            if(length < size){          //we reached the end but block isn't big enough
+                do Output.printString("Error, Memory.alloc() couldn't find a block");
+                do Sys.halt();
+            }
+            else{
+                //shrink and reallocate main block
+                let memory[pointer] = 0;                                //claim the block, by setting its legth value to zero
+                let memory[pointer + 1] = pointer + realsize;           //set the next pointer
+                let memory[pointer + realsize] = length - size - 2;     //calculate the length of the main block, (original_length - (claimed_block_length + overhead))
+                let memory[pointer + realsize + 1] = 16384;             //set the next pointer to the end of the heap
+            }
+        }
+        else{    //block found in the middle 
+            let memory[pointer] = 0;    //claim the block, by setting its legth value to zero
+            if ((length - size) < 4 ){ 
+                //dismiss the creation of a new leftover block if cannot hold at least two values taking overhead into account
+                //it creates a block bigger than necessary 
+            }
+            else{ //create a leftover block
+                let memory[pointer + 1] = pointer + realsize;               //set the next pointer of the claimed block
+                let memory[pointer + realsize] = length - size - 2;         //calculate the length of the leftover block, (original_length - (claimed_block_length + overhead))
+                let memory[pointer + realsize + 1] = next;                  //set the next pointer of leftover block
+            }
+           
+        }
+        
+        //return the address that points to the values not the overhead
+        return (pointer + 2); 
+    }
+
+    /** De-allocates the given object (cast as an array) by making
+     *  it available for future allocations. */
+    function void deAlloc(Array o) {
+        var int length;
+        var int next;
+        var int pointer;
+        var int pointer2;
+
+        let pointer = o;
+        let pointer = pointer - 2;          //point to length adress
+        let next = memory[pointer+1];
+        let length = next - pointer - 2;    //need to calculate the length of the block without taking into account the overhead
+
+        let memory[pointer] = length;
+
+        //partial defrag, check if the next block it's the main unallocated block and merge both blocks
+        if (memory[next+1] = 16384){
+            let memory[pointer] = (length + 2) + memory[next];
+            let memory[pointer+1] = 16384;
+            let memory[next] = 0;
+            let memory[next+1] = 0;
+        }
+        return;
+    }    
+}

@@ -1,0 +1,29 @@
+class Drum {
+    field int number;
+    field Array numbers;    
+    field Random rng;
+    field int ran;
+
+    constructor Drum new(int seed, int range){
+        let ran = range;
+        let rng = Random.new(seed);
+        let numbers = Array.new(ran + 1); //make Array larger than necessary so index matches
+        let number = rng.randRange(ran);
+        return this;
+    }
+
+    method int getNumber(){
+        while(numbers[number] = true){
+            let number = rng.randRange(ran);
+        }
+        let numbers[number] = true;   
+        return number;
+    }
+}
+
+    
+
+    
+
+
+
